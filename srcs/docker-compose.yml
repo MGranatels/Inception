@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    build: ./requirements/nginx
+    ports:
+      - "443:443"
+    networks:
+      - dockerNetwork
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    volumes:
+      - wordpress_volume:/var/www/html
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    build: ./requirements/mariadb
+    volumes:
+      - mariadb_volume:/var/lib/mysql
+    env_file:
+      - .env
+    healthcheck:
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 5s  
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+    restart: unless-stopped
+    expose:
+      - 3306
+    networks:
+      - dockerNetwork
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    build: ./requirements/wordpress
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - wordpress_volume:/var/www/html
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - dockerNetwork
+    expose:
+      - 9000
+volumes:
+  mariadb_volume:
+    driver: local
+    driver_opts: 
+      type: none
+      device: /home/mgranate/data/mariadb
+      o: bind 
+  wordpress_volume:
+    driver: local
+    driver_opts: 
+      type: none
+      device: /home/mgranate/data/wordpress
+      o: bind
+networks: 
+  dockerNetwork:
