@@ -1,9 +1,9 @@
 #!/bin/sh
 
-mkdir /var/www
-mkdir /var/www/html
+# Create directories if they don't exist
+mkdir /var/www 2> /dev/null
+mkdir /var/www/html 2> /dev/null
 
-# cd /var/www/html
 if [ -f ./wp-config.php ]
 then
 	echo "wordpress already downloaded"
@@ -16,13 +16,15 @@ else
     cp wp-config-sample.php wp-config.php
 
 	# Import env variables in the config file
-
 	sed -i "s/username_here/$DB_USER/g" wp-config.php
 	sed -i "s/password_here/$DB_PASSWORD/g" wp-config.php
 	sed -i "s/localhost/$DB_HOST/g" wp-config.php
 	sed -i "s/database_name_here/$DB_NAME/g" wp-config.php
+	# Core installation needs for wordpress and admin user added
 	wp core install --allow-root --url=${WP_URL} --title=${WP_TITLE} --admin_user=${WP_ADMIN_USER} --admin_password=${WP_ADMIN_PASS} --admin_email=${WP_ADMIN_EMAIL}
+	# Adds an extra user with no admin permissions
 	wp user create --allow-root ${WP_USER} ${WP_EMAIL} --user_pass=${WP_USER_PASS};
 fi
 
-exec /usr/sbin/php-fpm7.3 -F
+# Starts the PHP-FPM in the foreground
+exec /usr/sbin/php-fpm7.4 -F

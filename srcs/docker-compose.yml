@@ -8,7 +8,7 @@ services:
     ports:
       - "443:443"
     networks:
-      - dockerNetwork
+      - Inception
     restart: unless-stopped
     depends_on:
       - wordpress
@@ -27,12 +27,12 @@ services:
       timeout: 30s
       retries: 10
       start_period: 5s  
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      test: ["CMD", "mysqladmin", "ping", "--silent"] 
     restart: unless-stopped
     expose:
       - 3306
     networks:
-      - dockerNetwork
+      - Inception
   wordpress:
     image: wordpress
     container_name: wordpress
@@ -46,13 +46,13 @@ services:
       - .env
     restart: unless-stopped
     networks:
-      - dockerNetwork
+      - Inception
     expose:
       - 9000
 volumes:
   mariadb_volume:
-    driver: local
-    driver_opts: 
+    driver: local # Specifies that the volume will be managed by the local driver
+    driver_opts: # Indicates that the volume will not be managed by a specific volume driver type.
       type: none
       device: /home/mgranate/data/mariadb
       o: bind 
@@ -62,5 +62,10 @@ volumes:
       type: none
       device: /home/mgranate/data/wordpress
       o: bind
-networks: 
-  dockerNetwork:
+      # A bind mount allows the user to link a specific directory or file on the host machine to a directory inside the container
+      # Any changes made to the files or directories within the bind-mounted path on the host are immediately reflected
+      # inside the container and vice versa
+      # This is particularly usefull for scenarios where the user wants to manage data outside of the container
+      #and maintain it even when the container is not running.
+networks:
+  Inception:  
